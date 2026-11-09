@@ -3,6 +3,9 @@ import { getHealth } from './api/health.js'
 import { getProfile } from './api/profile.js'
 import Onboarding from './features/onboarding/Onboarding.jsx'
 import ProfileSummary from './features/onboarding/ProfileSummary.jsx'
+import IncomePage from './features/income/IncomePage.jsx'
+import ExpensePage from './features/expenses/ExpensePage.jsx'
+import Overview from './features/overview/Overview.jsx'
 
 const messages = {
   checking: ['Checking your connection', 'Making sure your local services are ready.'],
@@ -17,6 +20,7 @@ export default function App() {
   const [attempt, setAttempt] = useState(0)
   const [profile, setProfile] = useState(null)
   const [editing, setEditing] = useState(false)
+  const [page, setPage] = useState('overview')
   const name = import.meta.env.VITE_APP_NAME || 'SaveQuest'
 
   useEffect(() => {
@@ -54,16 +58,22 @@ export default function App() {
         <span className="local-tag">Your local savings space</span>
       </header>
       <main id="main">
-        <section className="intro" aria-labelledby="welcome-title">
+        <section className={`intro${profile ? ' intro--compact' : ''}`} aria-labelledby="welcome-title">
           <p className="eyebrow">YOUR FINANCIAL JOURNEY</p>
           <h1 id="welcome-title">Small steps.<br /><span>Meaningful progress.</span></h1>
           <p className="intro-copy">A little planning today. More possibilities tomorrow.
             Your savings journey starts with a foundation you can build on.</p>
         </section>
-        {state === 'ready' ? (
+        {state === 'ready' && profile && !editing && <nav className="app-navigation" aria-label="Main navigation">
+          <button type="button" className={page === 'overview' ? 'nav-active' : ''} aria-current={page === 'overview' ? 'page' : undefined} onClick={() => setPage('overview')}>Overview</button>
+          <button type="button" className={page === 'income' ? 'nav-active' : ''} aria-current={page === 'income' ? 'page' : undefined} onClick={() => setPage('income')}>Income</button>
+          <button type="button" className={page === 'expenses' ? 'nav-active' : ''} aria-current={page === 'expenses' ? 'page' : undefined} onClick={() => setPage('expenses')}>Expenses</button>
+          <button type="button" className={page === 'profile' ? 'nav-active' : ''} aria-current={page === 'profile' ? 'page' : undefined} onClick={() => setPage('profile')}>Profile</button>
+        </nav>}
+        {state === 'ready' && profile && !editing && page === 'overview' ? <Overview nickname={profile.nickname} onNavigate={setPage} /> : state === 'ready' && profile && !editing && page === 'expenses' ? <ExpensePage /> : state === 'ready' && profile && !editing && page === 'income' ? <IncomePage /> : state === 'ready' ? (
           profile && !editing
-            ? <ProfileSummary profile={profile} onEdit={() => setEditing(true)} />
-            : <Onboarding initial={profile} onCancel={() => setEditing(false)} onSaved={(saved) => { setProfile(saved); setEditing(false) }} />
+            ? <ProfileSummary profile={profile} onEdit={() => setEditing(true)} onNavigate={setPage} />
+            : <Onboarding initial={profile} onCancel={() => setEditing(false)} onSaved={(saved) => { setProfile(saved); setEditing(false); setPage('profile') }} />
         ) : <section className="setup-card" aria-labelledby="setup-title">
           <div className="card-heading">
             <span className="step-number" aria-hidden="true">01</span>

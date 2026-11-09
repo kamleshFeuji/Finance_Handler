@@ -67,3 +67,19 @@ The owner chose local single-user operation and authorized onboarding on 7 Novem
 Existing savings is an editable estimate only until an explicit one-time ledger conversion is implemented. Goal ideas are plain text, not actual goals. No XP or recorded financial totals are generated from onboarding estimates. Missing amounts and zero remain distinct; resubmission updates one profile and preserves its original completion timestamp.
 
 Applied profile migration; passed 16 backend tests, 8 frontend tests and production build. A real PostgreSQL smoke check passed and rolled back all fictional writes. Dedicated test-database credentials are not configured, so no isolated database suite was run. Visual browser checking was blocked by the browser automation host's URL-identification safety check; no UI action was performed after that stop.
+
+## Income entry/history — 9 November 2026
+
+The owner authorized the income slice before expenses. Implemented IncomeEntry and private IncomeChange audit records, additive migrations, local-only CSRF-protected APIs, and React Income navigation/page/forms/history. Monthly totals aggregate all active rows, not a visible page or an onboarding estimate. Recurring generation remains deferred; users record money once when received.
+
+Creation UUIDs and fingerprints prevent retries from duplicating income; conflicting reuses return 409. Versioned PUT/DELETE reject stale data under row locks. Deletion requires UI confirmation and sets a tombstone retained with audit history; there is no restore UI yet. Deleted IDs are excluded from reads and totals, and replaying their creation key cannot recreate them. Audits preserve decimal strings and are written atomically with the entry.
+
+Passed 30 backend tests, 17 frontend tests and build. Actual PostgreSQL checks used unique fictional owners and rolled back every test record, covering month totals/pagination, edits/deletes, ownership, retry/version conflicts, constraints and audit-failure atomicity. Existing profile and income records were not edited. Separate test-database credentials remain unconfigured. Visual browser QA was not rerun because of the earlier browser automation blocker. Next feature: expense entry and categories.
+
+## Expense tracking and UI clarity
+
+The owner reported seeing only the monthly-income input and authorized the next steps. The app previously defaulted to the planning profile, making the difference between estimates and actual income hard to discover. Returning users now open a recorded-month Overview with Income, Expenses and Profile navigation. The profile confirmation also links directly to both entry screens. Overview is intentionally limited to recorded income minus expenses before savings, not a bank balance or complete savings dashboard.
+
+Implemented ExpenseCategory, ExpenseEntry and private ExpenseChange records. Default categories are seeded for existing profiles by an additive migration and for new profiles atomically during onboarding. Profile edits do not recreate renamed defaults. Categories can be archived/restored while retaining past records. Each expense stores its own essential/optional flag; changing category defaults never rewrites past spending. Entries use retry keys, version conflicts, soft deletion and atomic audits like income. All related-category writes validate ownership.
+
+Passed 40 backend tests, 29 frontend tests, build, Django checks and migration drift checks. Real PostgreSQL tests rolled back all fictional-owner records and verified category lifecycle, classification snapshots, exact totals/overview arithmetic, pagination, ownership, retries, edits/deletes and audit atomicity. Current live API routes and updated Vite-served navigation were verified. Browser access host remained unavailable; no visual browser inspection is claimed. Separate test-database credentials remain unconfigured. Next milestone: goals and the savings ledger.

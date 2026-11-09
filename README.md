@@ -4,15 +4,19 @@ SaveQuest helps beginners decide where to save, understand why it matters, and b
 
 ## Project status
 
-**Single-user local onboarding is implemented.**
+**Single-user onboarding, income, expenses and a monthly overview are implemented.**
 
 The app now opens into a three-step onboarding form: nickname/income type, optional financial estimates, and savings priorities/goal ideas. Answers are saved in PostgreSQL, restored after refresh, and editable from the saved summary. Every question is optional; blank money values remain unknown rather than becoming zero.
 
-The first laptop's PostgreSQL connection works and the profile migration is applied. Existing savings is an onboarding estimate only; no actual savings transactions or goals are created yet. Registration and login are deferred at the owner's request. One internal account with an unusable password owns the local profile; it is never selected by the browser.
+The main navigation is **Overview · Income · Expenses · Profile**. Returning users open Overview by default. Income supports salary, freelance, allowance and other sources. Expenses support default/custom categories, essentials versus optional spending, edits, confirmed deletion, month filtering and paginated history. Categories can be archived/restored without losing earlier expenses. Both histories show totals across every record in the selected month, not just the visible page.
+
+Overview shows actual recorded income, expenses, essentials/optional spending, category totals and the remainder before savings. Profile contains onboarding estimates; editing these estimates never creates a transaction. Savings goals and the ledger are not implemented yet.
+
+The first laptop's PostgreSQL connection works and profile/income/expense migrations are applied. Existing savings is an onboarding estimate only; no actual savings transactions or goals are created yet. Registration and login are deferred at the owner's request. One internal account with an unusable password owns the local profile; it is never selected by the browser.
 
 Git initialization was not performed because that action was declined. No commits, remote configuration, or publication were made. `.gitignore` is prepared for when you initialize the repository.
 
-The app remains loopback-only with CSRF-protected writes. Income/expense entry, actual goals, savings ledger, dashboard and gamification are future milestones. No deployment is authorized.
+The app remains loopback-only with CSRF-protected writes. Actual goals, savings ledger, charts and gamification remain future milestones. No deployment is authorized.
 
 ## Run locally
 
@@ -30,7 +34,7 @@ Set-Location frontend
 npm.cmd run dev
 ```
 
-Open `http://localhost:5173` and refresh once if an older page is open. You should see **About you**, the first onboarding step. Saved profiles open their summary instead. Connection/database failures still show an actionable status screen. Restart Django after pulling backend changes; keep both servers on `localhost`. If PowerShell blocks `npm.ps1`, use `npm.cmd` as shown; changing execution policy is unnecessary. The Python environment can also be used directly without activation.
+Open `http://localhost:5173`; use **Ctrl+Shift+R** if an older screen is open. New users complete About you first; returning users open Overview with Income, Expenses and Profile alongside it. Choose Income → Add income or Expenses → Add expense. After first onboarding, the profile confirmation includes direct links to both entry pages. Connection/database failures show actionable messages. Restart Django after pulling backend changes; keep both servers on `localhost`. Use `npm.cmd` if PowerShell blocks `npm.ps1`; execution policy changes and virtual-environment activation are unnecessary.
 
 ## Read the plan
 
@@ -54,8 +58,8 @@ The first laptop uses Python 3.14, Node 24.12.0 and PostgreSQL 18. Django 5.2.19
 
 ## Verification and next milestone
 
-Passed: 16 backend tests, 8 frontend tests, and the production build. A real PostgreSQL smoke check verified profile creation/read/update, repeated saves, Decimal precision, unknown versus zero, database constraints and reserved-owner handling inside a rolled-back transaction. No fictional profile was retained. Separate test-database credentials are still unconfigured; this check did not claim to run an isolated database suite. Browser visual verification was blocked because the automation host could not determine the current browser URL.
+Passed: 40 backend tests, 29 frontend tests, production build, Django checks and migration consistency checks. Real PostgreSQL income/expense checks verified monthly totals, overview arithmetic, pagination, categories/archives, classification snapshots, edits/deletes, retries, ownership and audit atomicity. Fictional owners/records were rolled back without editing personal records. Live health, overview, income, expense and category API routes all return HTTP 200 through Vite; the server serves the updated navigation. Separate test-database credentials remain unconfigured. These rollback checks do not claim an isolated database suite. Visual browser inspection was unavailable because the browser access host could not connect.
 
-Next milestone: record income and expenses, followed by goals and the savings ledger. Login remains deferred. Do not scaffold all product modules at once.
+Next milestone: savings goals and the savings ledger, then allocation planning and richer dashboard progress. Login remains deferred. Automatic recurring income/expenses are not implemented; record each payment once when received or spent. Do not scaffold all product modules at once.
 
 See [Windows setup](docs/DEVELOPMENT.md) for prerequisites and the proposed commands for both laptops.

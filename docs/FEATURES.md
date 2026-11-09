@@ -1,6 +1,6 @@
 # Product understanding and scope
 
-Status: single-user local onboarding and editable profile summary are implemented. Registration/login are deferred by the owner. Finance, goals, dashboard and reward journeys below remain planned.
+Status: onboarding/profile, income, expense/category tracking and a basic monthly overview are implemented. Registration/login are deferred. Goals, savings ledger, richer dashboard and rewards below remain planned.
 
 ## Vision and core problems
 
@@ -22,11 +22,11 @@ The application records what users tell it. It does not move money, connect to b
 
 1. **Open your local space.** No registration/login. The backend selects one internal owner. Profile APIs require local mode, loopback access and CSRF protection for writes. Multi-user authentication is deferred.
 2. **Onboard in small steps — implemented.** Nickname; income type including irregular; optional monthly income, essentials and existing-savings estimates; primary priority and free-text goal ideas. Every question can be skipped. Missing estimates differ from zero. Save, refresh and edit from a summary. Existing savings remains an estimate until explicit conversion during the ledger milestone; onboarding creates no actual money entries or goals.
-3. **Record income and expenses.** Quick add, edit, confirmed delete, date/category filters and paginated history. Essential/discretionary is explicit. Defaults include housing, groceries, transport, utilities, health, family, shopping, entertainment, travel, education, other. Add custom categories and archive unused choices.
+3. **Record income and expenses — implemented.** Add, edit, confirm deletion and browse by calendar month with pagination and whole-month totals. Income sources include salary, freelance, allowance and other. Expenses support standard/custom categories, essential/optional status, category summaries and archive/restore. Actual dates cannot be future; amounts must be positive with at most two decimals. Retries do not add money twice, stale edits/deletes are rejected, and profile estimates never count as transactions.
 4. **Plan savings.** Default and custom savings pockets, per-goal monthly allocations, editable plans, and clear plan-versus-actual totals. Suggestions fit the user's estimated remaining capacity after needs and chosen enjoyment budget. Never equate a plan with saved money.
 5. **Create a goal and record progress.** Name, pocket, target, optional date; recorded contributions and withdrawals; goal history and correction workflow. Handle target-less category reserves, overfunding, multiple goals, and withdrawals from completed goals.
 6. **Build an emergency pocket.** User chooses essentials and coverage months; preview target, set it, record savings and withdrawals. No penalty for using it. This is a simple goal variant in MVP, not a separate money model.
-7. **Understand the dashboard.** Monthly income/expenses, remainder, planned and actual net savings, rate, emergency progress, active goals, basic earned badges and a six-month trend with an accessible table. Empty states explain the next useful action. Never show invented sample records as the real user's data.
+7. **Understand your month — basic Overview implemented.** Returning users see recorded income/expenses, remainder before savings, essential/optional spending and category totals. Buttons lead directly to the income/expense screens; estimates remain on Profile. Negative remainders are allowed and explained without shame. Savings plans/rates, emergency progress, goals, badges and six-month trends remain future dashboard enhancements. Never show invented sample records as real data.
 8. **Earn basic badges.** First goal, first recorded contribution, first completed goal. Awards are idempotent and amount-independent. A completed goal can reopen without removing its earned badge.
 9. **Adjust profile — basic editing implemented.** Edit onboarding answers or cancel edits. Currency is INR for the first version. No logout in local mode. Future target/estimate changes must clearly explain their planning effects.
 

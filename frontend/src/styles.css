@@ -71,3 +71,65 @@ button.text-button:hover:not(:disabled) { background: #eaf1ec; }
 .goal-ideas { white-space: pre-wrap; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 560px) { .onboarding-card { padding: 1.25rem; } .step-list { gap: .5rem; } .step-list li { font-size: .7rem; } .profile-grid { grid-template-columns: 1fr; gap: 1rem; } .onboarding-top .eyebrow { font-size: .6rem; } .form-actions button { flex: 1; width: auto; } }
+.app-navigation { display: flex; gap: .5rem; margin-bottom: 1.2rem; padding: .35rem; background: #e9efea; border-radius: 12px; }
+.app-navigation button { background: transparent; color: #34594f; flex: 1; }
+.app-navigation button.nav-active { background: #fff; box-shadow: 0 1px 5px #182e3212; }
+.app-navigation button:hover:not(:disabled) { background: #dbe9df; }
+.income-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.income-heading h2 { font-size: 1.8rem; }
+.income-form { border: 1px solid #b6cbbd; border-radius: 12px; background: #f8faf7; padding: 1.25rem; margin: 1.5rem 0; }
+.income-form h3 { font-size: 1.1rem; }
+.income-form form { margin-top: 1.2rem; }
+.income-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+.month-filter { display: flex; align-items: center; gap: .8rem; margin: 1.5rem 0; flex-wrap: wrap; }
+.month-filter label { font-size: .85rem; font-weight: 650; }
+.month-filter input { font: inherit; border: 1px solid #8a9d96; border-radius: 8px; color: #182e32; background: white; padding: .5rem .75rem; min-height: 44px; }
+.income-total { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; background: #eaf4ed; padding: 1.4rem; border-radius: 12px; margin: 1rem 0; }
+.income-total span { font-size: .8rem; color: #3e6153; }
+.income-total strong { display: block; font-size: 1.9rem; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.income-total p { margin: 0; font-size: .85rem; }
+.income-empty { padding: 2rem 0 1rem; color: #506268; }
+.income-empty h3 { color: #182e32; }
+.income-empty p { font-size: .9rem; }
+.income-list { padding: 0; margin: 1.5rem 0 0; list-style: none; }
+.income-list li { padding: 1.15rem 0; border-top: 1px solid #dce5dd; }
+.income-entry-main { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.income-entry-main > div { min-width: 0; }
+.income-entry-main strong { flex-shrink: 0; font-size: 1.05rem; }
+.income-entry-main h3 { overflow-wrap: anywhere; }
+.income-entry-main p { color: #536869; font-size: .8rem; margin: .2rem 0; }
+.income-entry-main .income-note { white-space: pre-wrap; overflow-wrap: anywhere; }
+.income-entry-actions { display: flex; justify-content: flex-end; gap: .25rem; }
+.income-entry-actions button { padding: .35rem .6rem; font-size: .8rem; }
+.income-entry-actions .danger { color: #962727; }
+.success-note { background: #eaf4ed; color: #245e40; padding: .75rem 1rem; border-radius: 8px; font-size: .9rem; }
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: 1.5rem; }
+.pagination span { font-size: .8rem; color: #536869; }
+@media (max-width: 560px) { .income-form-grid { grid-template-columns: 1fr; } .income-entry-main { flex-wrap: wrap; gap: .4rem; } .income-heading button { width: auto; } .income-total strong { font-size: 1.6rem; } .income-entry-actions button, .pagination button { width: auto; } }
+.intro--compact h1 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+.intro--compact .intro-copy { margin: 1rem 0 1.5rem; font-size: .95rem; }
+.app-navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.app-navigation button { padding: .7rem .35rem; font-size: .85rem; }
+.quick-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.2rem 0; }
+.overview-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin: 1.5rem 0; }
+.overview-stats > div { padding: 1rem; border: 1px solid #d5e3d9; border-radius: 12px; background: #f2f7f2; min-width: 0; }
+.overview-stats dt { font-size: .75rem; color: #456359; }
+.overview-stats dd { margin: .5rem 0; font-size: 1.5rem; font-weight: 750; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.overview-stats p { margin: 0; font-size: .7rem; color: #536869; }
+.balance-note { background: #fff6e6; color: #684e1d; border-radius: 9px; padding: 1rem; font-size: .85rem; }
+.expense-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; background: #f8f2e9; padding: 1.2rem; border-radius: 12px; }
+.expense-stats span { display: block; color: #6b573b; font-size: .75rem; }
+.expense-stats strong { display: block; font-size: 1.2rem; margin-top: .4rem; overflow-wrap: anywhere; }
+.checkbox-label { display: flex !important; align-items: center; gap: .7rem; font-size: .9rem; }
+.checkbox-label input { width: 20px !important; height: 20px; min-height: 20px !important; accent-color: #147568; flex-shrink: 0; }
+.category-manager { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid #dce5dd; }
+.category-manager summary { cursor: pointer; font-weight: 650; padding: .5rem 0; }
+.category-manager form { background: #f4f7f3; padding: 1rem; border-radius: 10px; margin: 1rem 0; }
+.category-manager form button { margin-top: 1rem; }
+.category-list, .category-breakdown { padding: 0; margin: 1rem 0; list-style: none; }
+.category-list li, .category-breakdown li { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .65rem 0; border-bottom: 1px solid #e1e8e1; font-size: .85rem; }
+.category-list li > span, .category-breakdown li > span { min-width: 0; overflow-wrap: anywhere; }
+.category-list small { display: block; color: #536869; font-size: .7rem; }
+.category-list button { flex-shrink: 0; }
+.breakdown-title { margin-top: 1.6rem; }
+@media (max-width: 560px) { .app-navigation { grid-template-columns: repeat(2, minmax(0, 1fr)); } .overview-stats { grid-template-columns: 1fr; } .overview-stats > div { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; align-items: center; } .overview-stats dd { text-align: right; } .overview-stats p { grid-column: 1 / -1; } .expense-stats { grid-template-columns: 1fr; } .expense-stats > div { display: flex; align-items: center; justify-content: space-between; gap: .5rem; } .expense-stats strong { margin: 0; } .quick-actions button { flex: 1; width: auto; } .category-list button { width: auto; } }
