@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "accounts.apps.AccountsConfig",
+    "finances.apps.FinancesConfig",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

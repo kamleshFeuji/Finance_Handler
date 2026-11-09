@@ -10,6 +10,7 @@ function mockAPI({ existing = null, failSave = false } = {}) {
     let data
     let status = 200
     if (url.endsWith('/health/')) data = { status: 'ok', database: 'connected' }
+    else if (url.includes('/overview/')) data = { income: '0.00', expenses: '0.00', remaining: '0.00', income_count: 0, expense_count: 0, essential: '0.00', optional: '0.00', categories: [] }
     else if (url.endsWith('/csrf/')) data = { csrf_token: 'masked-token' }
     else if (options.method === 'PUT') {
       if (failSave) { status = 400; data = { errors: { expected_monthly_income: ['Enter a valid amount.'] } } }
@@ -73,6 +74,7 @@ describe('single-user onboarding', () => {
   it('opens an existing profile without onboarding and can cancel edits', async () => {
     mockAPI({ existing: { nickname: 'Alex', goal_ideas: 'Travel', expected_monthly_income: '5000.00' } })
     render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Profile', exact: true }))
     expect(await screen.findByText('Welcome, Alex.')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Edit my starting point' }))
     fireEvent.change(screen.getByLabelText('What should we call you?'), { target: { value: 'Changed' } })

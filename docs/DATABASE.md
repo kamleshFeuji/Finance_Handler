@@ -1,6 +1,12 @@
 # Proposed PostgreSQL design
 
-Status: User and UserFinancialProfile are implemented and migrated. Financial ledger and remaining entities below are planned. All money uses `DecimalField(max_digits=14, decimal_places=2)`, never floating point. API money is serialized as strings. Values must be finite, within precision, and have at most two decimal places; do not silently round user input.
+Status: User, profile, income/expense entries, expense categories and private income/expense audits are implemented and migrated. Savings ledger and remaining entities below are planned. All authoritative money uses `DecimalField(max_digits=14, decimal_places=2)`, never floating point. API money is serialized as strings. Values must be finite, within precision, and have at most two decimal places; do not silently round user input.
+
+IncomeEntry also stores `request_key` UUID, creation payload fingerprint, integer version, created/updated timestamps and nullable `deleted_at`. Constraints enforce positive amounts, version >= 1, and unique `(user, request_key)`; `(user, received_on)` is indexed. Lists/totals exclude deleted entries. Future-dated actual income is rejected in both serializer and model validation. An IncomeChange belongs to an entry and records action, timestamp, and before/after JSON audit snapshots with monetary values represented as strings. Authoritative amounts remain Decimal columns on IncomeEntry. Audit snapshots and soft-deleted entries are private historical data, not extra income records.
+
+ExpenseEntry uses the same retry/version/tombstone/audit pattern with `spent_on`, `category` and an explicit `is_essential` snapshot. ExpenseChange contains immutable before/after snapshots; it never contributes to totals. PostgreSQL checks enforce positive expense amounts/versions and unique owner/request UUIDs; `(user, spent_on)` is indexed. Model and service validation require matching category/entry ownership. Category defaults only suggest a type for new entries and cannot change old classification.
+
+ExpenseCategory has unique `(user, normalized_name)`, display name, default-essential flag, archive flag and version. The defaults migration inserts missing categories for existing profiles without changing any financial record. New profile creation supplies the same defaults atomically; ordinary profile edits leave renamed/archived categories alone. Referenced categories are archived/restored rather than deleted. Existing expenses can retain an archived category, but new entries or category changes must use active categories.
 
 Current single-user owner: server-selected `_savequest_local`, unusable password, no registration/login. The profile stores nickname (60 chars), income type, nullable monthly income/essential-expense/existing-savings estimates, priority, goal ideas (500 chars), completion timestamp and audit timestamps. Three database constraints reject negative estimates. Missing estimates differ from zero. Currency/timezone remain INR/Asia-Kolkata configuration rather than editable fields in this milestone. Goal ideas are plain text, not SavingsGoal records.
 
@@ -10,8 +16,10 @@ Current single-user owner: server-selected `_savequest_local`, unusable password
 erDiagram
     USER ||--|| FINANCIAL_PROFILE : has
     USER ||--o{ INCOME_ENTRY : owns
+    INCOME_ENTRY ||--o{ INCOME_CHANGE : audits
     USER ||--o{ EXPENSE_CATEGORY : owns
     USER ||--o{ EXPENSE_ENTRY : owns
+    EXPENSE_ENTRY ||--o{ EXPENSE_CHANGE : audits
     EXPENSE_CATEGORY ||--o{ EXPENSE_ENTRY : classifies
     USER ||--o{ SAVINGS_CATEGORY : owns
     USER ||--o{ SAVINGS_GOAL : owns
@@ -38,9 +46,11 @@ All entities have a primary key. Mutable entities have `created_at` and `updated
 | --- | --- | --- |
 | User | Django AbstractUser subclass; username, password hash, optional email | Username unique; no bank details; custom model before initial migration |
 | UserFinancialProfile | OneToOne User; nickname, income_type, expected_monthly_income nullable, essential_monthly_expenses nullable, currency, timezone, priority, onboarding_completed_at | Estimates >= 0; MVP currency INR; estimates never count as actual income or expenses; priority is a small choice field |
-| IncomeEntry | User FK, amount, source choice, optional label, received_on, note | Amount > 0; actual entry dates cannot be future; source salary/freelance/allowance/other |
-| ExpenseCategory | User FK, name, normalized_name, default_essential, is_archived | Unique `(user, normalized_name)`; default categories copied to each user |
-| ExpenseEntry | User FK, category FK, amount, spent_on, is_essential, note | Amount > 0; category must belong to user; essential flag is a historical snapshot independent of category defaults |
+| IncomeEntry | User FK, amount, source choice, optional label, received_on, note, request key/fingerprint, version, deletion timestamp | Implemented; amount > 0; actual dates cannot be future; sources salary/freelance/allowance/other; owner-scoped retries and versioned mutations |
+| IncomeChange | IncomeEntry FK, action, before/after snapshots, timestamp | Implemented; created in same transaction as entry mutation; never included in totals |
+| ExpenseCategory | User FK, name, normalized_name, default_essential, is_archived, version | Implemented; unique `(user, normalized_name)`; owner-specific defaults; versioned archive/restore |
+| ExpenseEntry | User FK, category FK, amount, spent_on, is_essential, label, note, request key/fingerprint, version, deletion timestamp | Implemented; amount > 0; own category only; essential flag independent of category default changes |
+| ExpenseChange | ExpenseEntry FK, action, before/after snapshots, timestamp | Implemented; atomic private audit history; not an extra financial movement |
 | SavingsCategory | User FK, name, normalized_name, kind, is_archived | Unique name per user; kinds emergency/security/travel/entertainment/short_term/long_term/custom |
 | SavingsGoal | User FK, SavingsCategory FK, name, target_amount nullable, target_date nullable, is_reserve, is_archived, emergency_months nullable | Named goals require target > 0; target-less reserve pockets allowed; target date optional; at most one emergency goal per user |
 | SavingsTransaction | Goal FK, signed amount, kind, occurred_on, idempotency_key, reverses OneToOne self nullable, correction_reason | Kinds opening/contribution/withdrawal/reversal; immutable; amount nonzero; see ledger rules below |
@@ -50,7 +60,7 @@ All entities have a primary key. Mutable entities have `created_at` and `updated
 
 Default savings categories each have a reserve goal/pocket if users want category savings without a named purchase. Category balances aggregate all their goals. Transactions have one required goal FK; ownership and category are derived. There is no second category-level contribution table and no optional goal/category ambiguity.
 
-For the current onboarding-only milestone, `existing_savings_estimate` is an editable planning estimate and never an authoritative balance. No ledger exists yet. When the ledger milestone is implemented, explicitly confirm the estimate and convert it once into `opening` entries allocated to selected pockets; an unallocated remainder can use a starting-savings reserve. Record a conversion marker and make retries atomic/idempotent. Never add the estimate to ledger totals or reconvert it after profile edits. Actual balance corrections belong to the ledger, not this estimate.
+`existing_savings_estimate` remains an editable planning estimate, never an authoritative balance or income entry. No savings ledger exists yet. When the ledger milestone is implemented, explicitly confirm the estimate and convert it once into `opening` entries allocated to selected pockets; an unallocated remainder can use a starting-savings reserve. Record a conversion marker and make retries atomic/idempotent. Never add the estimate to ledger or income totals or reconvert it after profile edits. Actual balance corrections belong to the ledger, not this estimate.
 
 Monthly contribution plans live only in BudgetAllocation. A goal's displayed monthly plan reads that month's allocation; category plans sum goal allocations. Avoid a second editable monthly-plan field on SavingsGoal. A desired pace to reach a deadline is a computed suggestion, not an allocation or actual contribution.
 
@@ -73,7 +83,7 @@ Meaningful multi-value priorities can later use a join table; avoid JSON blobs f
 - Ownership across two related tables cannot be expressed as an ordinary Django CheckConstraint. Serializers and all write services independently enforce it, including admin/seed paths. Do not expose unrestricted financial model editing in admin.
 - Transaction ownership derives from the immutable goal owner. Never allow ownership reassignment. Lock goal/category changes after ledger history exists; otherwise balances would silently move between categories.
 - Protect referenced categories and goals from deletion. Archive them; hide from new-entry pickers but retain history. Savings transaction updates/deletes are forbidden; corrections are explicit ledger operations. Remove unused goals/categories only when no history exists.
-- Income/expense edit and delete operations are allowed with clear confirmation; summaries are recomputed immediately. A short audit record of changes (owner, record ID, changed fields, before/after values, timestamp) belongs in the money-entry milestone and inherits financial privacy protections. Do not log values to application logs.
+- Income and expense edits/confirmed deletes use version checks and immutable before/after audits. Deleted entries remain as tombstones, disappear from reads/totals, and cannot be recreated by replaying the same request key. All audit data inherits financial privacy protections; do not log values to application logs.
 - Account deletion and backups need a separate explicit policy before public launch. No automatic database reset or cascading removal of users during seeding.
 
 ## Financial definitions

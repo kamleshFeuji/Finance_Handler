@@ -1,6 +1,6 @@
 # Incremental development roadmap
 
-Status: architecture approved on 6 November 2026. Local PostgreSQL connectivity and migrations work. Single-user onboarding approved and implemented on 7 November 2026: editable optional estimates/priorities/goal ideas with a saved summary. Registration/login are deferred by the owner. Git initialization was declined. Second-laptop setup remains a future rehearsal. Durations depend on availability; use acceptance gates rather than fixed promises.
+Status: local onboarding, income, expenses/categories and a basic monthly overview are implemented. The UI now separates actual money entries from profile estimates and opens Overview for returning users. PostgreSQL migrations/checks pass. Registration/login remain deferred; Git initialization was declined. Second-laptop setup remains a future rehearsal.
 
 | Phase / milestone | Deliverable | Acceptance gate |
 | --- | --- | --- |
@@ -9,10 +9,11 @@ Status: architecture approved on 6 November 2026. Local PostgreSQL connectivity 
 | 2b — Connectivity | Database-backed health endpoint; React calls it through Vite proxy | Connected, backend unavailable and DB unavailable states verified; Django checks and frontend build pass |
 | 3a — Authentication deferred | Registration/login omitted for current local single-user app | Revisit only if multiple users or public use are requested |
 | 3b — Profile/onboarding implemented | Three optional steps, local owner, estimates/priorities/goal ideas, saved summary/edit | 16 backend and 8 frontend tests pass; real PostgreSQL rollback check passed; browser visual check unavailable |
-| 3c — Income/expenses | CRUD, defaults/custom categories, essential flag, audit, filters and pagination | Decimal/date validation, edits/deletes, totals and ownership tests pass |
+| 3c.1 — Income implemented | Add/edit/confirmed delete, sources, monthly totals/history, pagination, version conflicts, private audits | 30 backend tests, 17 frontend tests and build pass; real PostgreSQL rollback checks pass |
+| 3c.2 — Expenses implemented | CRUD, default/custom categories, essential flag, archive/restore, audit, month filtering/pagination | 40 backend and 29 frontend tests, build and actual PostgreSQL checks pass |
 | 3d — Goals and ledger | Goals/reserves, contributions, withdrawals, history and corrections | No double counting; idempotency, historical overdraft and concurrent withdrawal tests pass on PostgreSQL |
 | 3e — Planning/emergency | Monthly goal allocations, capacity preview, emergency target setup | Plans never affect actuals; missing estimates and oversubscribed plans handled clearly |
-| 3f — Dashboard/basic badges | Monthly selectors, trend/table, progress, first badges, responsive shell | Formula fixtures, empty/error states, cross-user access and badge retries pass |
+| 3f — Basic overview implemented; savings dashboard later | Current overview shows monthly income/expenses/remainder/type/category totals; trends, savings progress and badges remain planned | Overview arithmetic, navigation, empty/error states pass; savings/badge tests follow their features |
 | 3g — MVP review | Second-laptop rehearsal, end-to-end manual journeys, privacy check | Both users can complete core loop independently with consistent results |
 | 4a — XP/levels | Event catalog, rule tests, XP history and progress | Unique/correct awards, no wealth bias or withdrawal penalties |
 | 4b — Challenges/learning | Opt-in challenges, reviewed lessons/quizzes and badges | Affordable enrollment, server completion evidence, retry/correction tests |

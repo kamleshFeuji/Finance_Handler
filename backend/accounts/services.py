@@ -11,6 +11,16 @@ class LocalOwnerConflict(Exception):
     pass
 
 
+def get_local_owner():
+    profile = UserFinancialProfile.objects.select_related("user").filter(user__username=LOCAL_USERNAME).first()
+    if profile is None:
+        return None
+    user = profile.user
+    if user.has_usable_password() or user.is_staff or user.is_superuser:
+        raise LocalOwnerConflict
+    return user
+
+
 def load_profile():
     return UserFinancialProfile.objects.filter(user__username=LOCAL_USERNAME).first()
 
@@ -25,7 +35,8 @@ def save_profile(data):
     if user.has_usable_password() or user.is_staff or user.is_superuser:
         raise LocalOwnerConflict
     profile = UserFinancialProfile.objects.filter(user=user).first()
-    if profile is None:
+    new_profile = profile is None
+    if new_profile:
         profile = UserFinancialProfile(user=user, onboarding_completed_at=timezone.now())
     # PUT is full replacement. Empty optional fields remain unknown, not zero.
     for field in ("nickname", "income_type", "priority", "goal_ideas"):
@@ -34,4 +45,7 @@ def save_profile(data):
         setattr(profile, field, data.get(field))
     profile.full_clean()
     profile.save()
+    if new_profile:
+        from finances.expense_services import ensure_default_categories
+        ensure_default_categories(user)
     return profile

@@ -1,8 +1,4 @@
 import json
-from functools import wraps
-
-from django.conf import settings
-from django.db import DatabaseError
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.views.decorators.cache import never_cache
@@ -11,19 +7,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .serializers import ProfileSerializer
 from .services import LocalOwnerConflict, load_profile, save_profile
-
-
-def local_only(view):
-    @wraps(view)
-    def wrapped(request, *args, **kwargs):
-        host = request.get_host().split(":")[0]
-        if not settings.LOCAL_SINGLE_USER or host not in {"localhost", "127.0.0.1"} or request.META.get("REMOTE_ADDR") not in {"127.0.0.1", "::1"}:
-            return JsonResponse({"message": "This feature is available only on this computer."}, status=403)
-        try:
-            return view(request, *args, **kwargs)
-        except DatabaseError:
-            return JsonResponse({"message": "The profile could not be accessed. Check the database connection and apply migrations."}, status=503)
-    return wrapped
+from .access import local_only
 
 
 @never_cache

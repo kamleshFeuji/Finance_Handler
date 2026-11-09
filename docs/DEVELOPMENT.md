@@ -1,6 +1,6 @@
 # Two-developer workflow and Windows setup plan
 
-Status: the first laptop has a working PostgreSQL connection and applied User/profile migrations. Single-user onboarding, profile summary/edit, local CSRF protection and readiness handling exist. Registration/login are deferred. Actual finance features, seed commands and a separate PostgreSQL test role remain future setup work.
+Status: PostgreSQL connectivity and User/profile/income/expense/category migrations work on the first laptop. Onboarding, Profile, Income, Expenses and monthly Overview exist, with local access/CSRF protection. Registration/login remain deferred. Savings goals, demo seeds and separate PostgreSQL test-role setup are future work.
 
 ## Independent local environments
 
@@ -107,7 +107,7 @@ Set-Location 'C:\Git and GitHub\SaveQuest\backend'
 .\.venv\Scripts\python.exe manage.py migrate
 ```
 
-The User and profile migrations are applied on the first laptop. On a new laptop run migrations after configuring its own application role/database and password. Migration files synchronize schema, never private records.
+The User, profile, income and expense/category migrations are applied on the first laptop. Defaults are seeded for existing profiles without changing financial records. On a new laptop run migrations after configuring its own role/database and password. Migration files synchronize schema, never private financial records.
 
 ### Future seed command
 
@@ -173,7 +173,7 @@ Current backend readiness tests use SimpleTestCase with a mocked connection; run
 
 ```powershell
 Set-Location 'C:\Git and GitHub\SaveQuest\backend'
-.\.venv\Scripts\python.exe manage.py test accounts.tests config.tests --settings=config.settings.test
+.\.venv\Scripts\python.exe manage.py test accounts.tests config.tests finances.tests --settings=config.settings.test
 # Once database-backed feature tests are implemented and the test role exists:
 # .\.venv\Scripts\python.exe manage.py test --settings=config.settings.test
 .\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
@@ -189,7 +189,24 @@ npm.cmd run test -- --run
 npm.cmd run build
 ```
 
-The current 16 backend tests cover serializers, local-mode access, anonymous CSRF, origin rejection, validation and readiness without requiring a test database. Eight frontend tests cover connection states, skipping fields, saving, editing, cancel, zero/unknown and server validation failures.
+The current 40 backend tests cover profile/income/expense/category validation, local access, anonymous CSRF, origin rejection, date/month handling and readiness without requiring a test database. Twenty-nine frontend tests cover onboarding, the Overview landing/navigation, income/expense entry/edit/delete, classification, categories, retries, pagination and load failures.
+
+Income's real PostgreSQL smoke check uses unique temporary fictional owners, works even when your real profile already exists, and rolls back all test records:
+
+```powershell
+# From backend:
+.\.venv\Scripts\python.exe scripts\check_income.py
+```
+
+It verifies totals across all pages, adjacent-month isolation, another owner's IDs, duplicate submissions, stale versions, edits/deletes, retained audits, positive-money constraints and rollback if an audit write fails. It passed without modifying personal records. It uses the existing development database within a rollback-only transaction; it is not a claim that an isolated test database was configured.
+
+Expense and Overview persistence checks also use temporary owners and roll back all fictional records:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\check_expenses.py
+```
+
+This covers exact monthly/type/category totals, overview arithmetic (including expenses above income), ownership, pagination, category defaults/custom names/archives/restores, classification history, retries, version conflicts and audit rollback. Both PostgreSQL checks pass. Live health, overview, income, expenses and category routes return HTTP 200 through Vite on the first laptop. Browser automation was unavailable, so no visual inspection is claimed. If an older UI remains, use Ctrl+Shift+R at `http://localhost:5173`; saved profiles should open Overview with four navigation buttons.
 
 Before the first real profile exists, this optional smoke check exercises the real PostgreSQL save/read/update path inside a transaction and rolls back all fictional writes:
 

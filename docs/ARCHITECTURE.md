@@ -1,14 +1,24 @@
 # Proposed architecture
 
-Status: architecture approved on 6 November 2026; single-user local mode and onboarding approved on 7 November 2026. The custom User, financial profile, readiness endpoint, CSRF endpoint and profile API are implemented. Remaining modules are planned. Registration/login are explicitly deferred. Review alongside [database](DATABASE.md), [scope](FEATURES.md), and [decisions](DECISIONS.md).
+Status: local onboarding, income, expenses/categories and a monthly overview are implemented. Main navigation now opens Overview by default for saved profiles, with Income, Expenses and Profile. Savings goals and other modules remain planned. Registration/login are explicitly deferred. Review alongside [database](DATABASE.md), [scope](FEATURES.md), and [decisions](DECISIONS.md).
 
 ## Current single-user mode
 
-`config.settings.local` enables `LOCAL_SINGLE_USER`; base settings disable it. Profile/CSRF endpoints accept only loopback clients and local hostnames, with the existing Vite same-origin proxy. Never enable this mode on a public server. CSRF middleware and explicit protection remain on anonymous writes; no global DRF permission defaults were relaxed.
+`config.settings.local` enables `LOCAL_SINGLE_USER`; base settings disable it. Profile, money, overview and CSRF endpoints share a guard accepting only loopback clients and local hostnames through the Vite same-origin proxy. Never enable this mode on a public server. CSRF middleware and explicit protection remain on anonymous writes; no global DRF permission defaults were relaxed.
 
-The server selects the reserved `_savequest_local` owner, created only on first save with an unusable password. An existing usable/staff/superuser account with that name produces a conflict instead of being taken over. GET does not create records. Profile PUT updates one OneToOne record inside a transaction and locks its owner, so retries do not create extra profiles. No owner ID is accepted from the client. Future financial records will use the same server-selected owner. Multi-user authentication requires a separately approved transition, not simply exposing these local endpoints.
+The server selects the reserved `_savequest_local` owner, created only on first profile save with an unusable password. An existing usable/staff/superuser account with that name produces a conflict instead of being taken over. GET does not create records. Profile PUT updates one OneToOne record inside a transaction and locks its owner, so retries do not create extra profiles. Income requires a completed profile and uses that same server-selected owner; no owner ID is accepted from the client. Multi-user authentication requires a separately approved transition, not simply exposing these local endpoints.
 
 Current API: `GET /api/v1/health/`, `GET /api/v1/csrf/`, `GET/PUT /api/v1/profile/`. GET returns `{profile: null}` before onboarding. The CSRF endpoint returns a masked token and cookie; the frontend sends it in `X-CSRFToken` for PUT. Missing/invalid CSRF fails even without login. Profile responses are never cached. Existing savings is stored as a nullable estimate, not a balance or ledger movement.
+
+Income API: `GET/POST /api/v1/income/` and `GET/PUT/DELETE /api/v1/income/{id}/`. Lists accept `month=YYYY-MM&page=1`, default to the configured local month, and return `results`, decimal-string `total`, `count`, `page`, `pages`, and `month`. Pages hold 25 records; totals aggregate all non-deleted entries for the month. Future received dates and nonpositive/invalid amounts are rejected. List/detail reads are never cached.
+
+Create requests carry a UUID `request_key`, unique per owner. Under an owner row lock, same-key/same-payload retries return the existing entry; changed payloads or deleted entries return 409. PUT/DELETE require `expected_version` and lock the entry; stale writes return 409. Deletes set a timestamp instead of removing the row. Each mutation writes an audit snapshot in the same transaction. The React API client shares CSRF/error/timeout handling across onboarding and income, while income forms retain their creation UUID on retries.
+
+Expense API follows the same mutation/retry/audit pattern at `GET/POST /api/v1/expenses/` and `GET/PUT/DELETE /api/v1/expenses/{id}/`. Expense lists return decimal-string total, essential and optional totals, pagination and category breakdowns for the whole month. Each expense belongs to the local owner and one of that owner's categories; future dates and nonpositive amounts are rejected. `is_essential` is explicitly saved per entry so category-default changes do not rewrite history.
+
+Categories: `GET/POST /api/v1/expense-categories/`, `PUT /api/v1/expense-categories/{id}/`. Names are normalized and unique per owner; updates require a version. Default categories are added by migration for existing profiles and inside first onboarding save for new profiles. Profile edits do not recreate renamed defaults. Archive/restore preserves all expense history. New entries require active categories; an edit may retain its existing archived category.
+
+`GET /api/v1/overview/?month=YYYY-MM` computes recorded income, expenses, essential/optional spending, category totals and `remaining = income - expenses` in the backend. All values exclude deleted records and profile estimates. Remaining may be negative, excludes savings transfers, and is never labelled a bank balance. This is a basic overview, not the future savings/XP dashboard.
 
 ## System shape
 
@@ -29,7 +39,7 @@ The development proxy keeps browser requests same-origin, avoiding a CORS packag
 
 ## Proposed version families and reasons
 
-Checked against official guidance on 6 November 2026. The first laptop already has Python 3.14 and PostgreSQL 18; these supported versions are used rather than installing parallel runtime families. Dependencies are now pinned in the committed lockfiles; database-backed verification is pending local credentials.
+Checked against official guidance on 6 November 2026. The first laptop already has Python 3.14 and PostgreSQL 18; these supported versions are reused. Exact dependency pins are stored in the lockfiles. Live connectivity and profile/income persistence checks pass; separate test-role credentials remain unconfigured.
 
 | Tool | Recommendation | Reason |
 | --- | --- | --- |
@@ -101,7 +111,7 @@ See [Django CSRF](https://docs.djangoproject.com/en/5.2/howto/csrf/) and [DRF se
 
 ## Proposed project folders
 
-The following is the target layout, introduced incrementally. `backend/config`, User/profile migrations, serializers/services/views/tests, local environment bootstrap, readiness checks, and React onboarding/summary components exist. Finance apps, dashboard, authentication endpoints and seed commands are not yet implemented:
+The following is the target layout, introduced incrementally. Accounts/profile and finances income/expense/category models, migrations, services, serializers, views and tests exist. React has onboarding, profile, income, expense/category management and overview components plus shared API/formatting helpers. Goals, savings ledger, richer dashboard, authentication and demo seed commands are not implemented:
 
 ```text
 SaveQuest/

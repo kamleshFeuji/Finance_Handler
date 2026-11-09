@@ -1,6 +1,6 @@
 # Proposed UI and dashboard
 
-Status: the responsive three-step onboarding form and saved-profile summary/edit flow are implemented in React. The dashboard wireframe and remaining pages below are future designs. Registration/login are omitted for the current single-user local application.
+Status: responsive onboarding, profile editing, income/expense tracking and basic Overview are implemented. Returning users open Overview; navigation explicitly offers Overview, Income, Expenses and Profile. Profile estimates are labelled as planning inputs and link to actual entry screens. Overview has income/expense/remainder cards and recording shortcuts. Expense history has monthly type/category totals, add/edit/delete forms and a category manager with archive/restore. Navigation uses two columns on narrow screens. The larger savings dashboard wireframe below remains a future design. Registration/login are omitted.
 
 ## Visual direction
 

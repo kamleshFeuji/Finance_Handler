@@ -2,7 +2,7 @@
 
 ## Current approval boundary
 
-The project owner approved the architecture on 6 November 2026 and single-user local onboarding on 7 November 2026. Registration/login are deferred by explicit user request. Implement onboarding incrementally. Do not deploy or publish without explicit permission.
+The project owner approved the architecture on 6 November 2026, single-user onboarding on 7 November 2026, and income tracking on 9 November 2026. The owner subsequently authorized expense tracking and clearer UI navigation/overview. Registration/login remain deferred. Work incrementally; goals and savings ledger follow expenses. Do not deploy or publish without explicit permission.
 
 ## Product and stack
 
